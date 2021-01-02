@@ -1,1 +1,86 @@
-/usr/share/munin/plugins/onewire
+#!/bin/sh
+# -*- sh -*-
+
+: <<=cut 
+
+=head1 NAME
+
+onewire - Munin plugin to monitor the temperature from different DS18B20 Temperature Sensors.
+
+=head1 APPLICABLE SYSTEMS
+
+Raspberry Pi with OneWire and DS18B20 Sensors.
+
+
+=head1 USAGE
+
+Link this plugin to /etc/munin/plugins/ and restart the munin-node.
+
+=head1 INTERPRETATION
+
+The plugin shows the temperature from the different DS18B20 sensors. 
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=head1 BUGS
+
+None known.
+
+=head1 VERSION
+
+$Id:$
+
+=head1 AUTHOR
+
+Daniel Ackermann (02.01.2020)
+
+=head1 LICENSE
+
+GPLv2
+
+=cut
+
+
+
+do_ () { # Get Temperatures from Sensors
+
+	#For each Sensor add a new Line and Replace the Sensor Number (starting with 28-) and Change the .value text
+
+echo Outside.value `echo "scale=2;$(($(echo $(cat /sys/bus/w1/devices/28-01156172c0ff/w1_slave | grep "t=") | cut -d "=" -f2))) / 1000" | bc`
+echo Inside.value `echo "scale=2;$(($(echo $(cat /sys/bus/w1/devices/28-0115616e3cff/w1_slave | grep "t=") | cut -d "=" -f2))) / 1000" | bc`
+
+
+
+}
+
+do_config () {
+
+	#Name of the Graph
+    echo "graph_title Onewire Temperatur Sensoren"
+    echo "graph_vlabel Celsius"
+    echo "graph_category DS18B20"
+
+	#The Description of Graph
+    echo "graph_info Zeit innen und Aussentemeratur."
+
+	#For each Sensor on top add a line for Label
+    echo "Outside.label Outside"
+    echo "Inside.label Inside"
+
+}
+
+do_autoconf () {
+    echo yes
+    exit 0
+}
+
+case $1 in
+    config|autoconf|'')
+	eval do_$1
+esac
+
+exit $?
+
